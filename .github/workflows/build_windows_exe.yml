@@ -1,0 +1,52 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r requirements.txt
+          pip install pyinstaller pywebview pywin32
+
+      - name: Build EXE
+        shell: pwsh
+        run: |
+          pyinstaller --clean NeoAIReportApp.spec
+
+      - name: Package folder
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\NeoAIReportApp.exe -DestinationPath dist\NeoAIReportApp_windows.zip -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeoAIReportApp-windows-exe
+          path: |
+            dist/NeoAIReportApp.exe
+            dist/NeoAIReportApp_windows.zip
