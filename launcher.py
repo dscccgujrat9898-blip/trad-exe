@@ -47,7 +47,8 @@ def run_server(port: int) -> None:
             host="127.0.0.1",
             port=port,
             reload=False,
-            log_level="info",
+            log_config=None,
+            access_log=False,
         )
         server = uvicorn.Server(config)
         server.run()
